@@ -4444,9 +4444,9 @@ readable-stream@~1.1.8, readable-stream@~1.1.9:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-realm@^2.3.0:
-  version "2.3.0"
-  resolved "http://registry.npm.taobao.org/realm/download/realm-2.3.0.tgz#b6a022f2cc434d107a253305a206dfb84a6b722e"
+realm@1.15.0:
+  version "2.2.15"
+  resolved "http://registry.npm.taobao.org/realm/download/realm-2.2.15.tgz#f599d52b3a2cc904c056b8d183f8bafe634769c9"
   dependencies:
     command-line-args "^4.0.6"
     decompress "^4.2.0"
@@ -4460,7 +4460,7 @@ realm@^2.3.0:
     request "^2.78.0"
     stream-counter "^1.0.0"
     sync-request "^3.0.1"
-    url-parse "^1.2.0"
+    url-parse "^1.1.7"
 
 realpath-native@^1.0.0:
   version "1.0.0"
@@ -5392,7 +5392,7 @@ urix@^0.1.0:
   version "0.1.0"
   resolved "http://registry.npm.taobao.org/urix/download/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
 
-url-parse@^1.2.0:
+url-parse@^1.1.7:
   version "1.2.0"
   resolved "http://registry.npm.taobao.org/url-parse/download/url-parse-1.2.0.tgz#3a19e8aaa6d023ddd27dcc44cb4fc8f7fec23986"
   dependencies:

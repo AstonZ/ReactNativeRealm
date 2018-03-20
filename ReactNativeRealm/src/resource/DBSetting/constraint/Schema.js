@@ -26,7 +26,7 @@ export default {
             title_to:'string?',
             star_to:'string?',
             is_hl:{type:'bool', default:false},
-            annos:'Annotaion[]?',
+            annos:'Annotation[]',
             other_links:'string?'
         }
     }

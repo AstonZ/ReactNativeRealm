@@ -1,44 +1,42 @@
 import React, { Component } from 'react';
 import { Container, Header, Content, List, ListItem, Text } from 'native-base';
-import Schema from './src/resource/DBSetting/constraint/Schema'
+import DBHander from './src/resource/DBSetting/dbAPI/DBHandler'
 
-const Realm = require('realm')
-
-
-export default class ListDividerExample extends Component {
+export default class App extends Component {
 
  constructor(props){
    super(props)
-   this.db=null
-   this._initialState()
  }
 
  _initialState =()=>{
-  let AnnoSchema = scheme.Annotation
-  let SentenceSchema = scheme.Sentence
-  this.db=new Realm({schema:[AnnoSchema, SentenceSchema]})
+  // let AnnoSchema = Schema.Annotation
+  // let SentenceSchema = Schema.Sentence
+  // this.db=new Realm({schema:[AnnoSchema, SentenceSchema]})
  }
 
  _onAddSingleData = ()=>{
-  this.db.write(()=>{
-    this.db.create('Sentence',{
-      book_type:0,
-      book_index:1,
-      chapter_index:1,
-      bible_index:"创 1:1",
-      raw_content:'',
-      note_id:'',
-      title_to:'',
-      star_to:'',
-      is_hl:0,
-      annos:[{
+  let sentence = {
+    id: 1,
+    book_type:0,
+    book_index:1,
+    chapter_index:1,
+    sent_index:1,
+    bible_index:"创 1:1",
+    book_name:"创世纪",
+    chapter_name:'起初',
+    raw_content:'嘿哈嘿看接口就',
+    note_id:'note001',
+    title_to:'article001',
+    star_to:'article002',
+    is_hl:false,
+    annos:[{
         location:1,
         length:2,
         article_id:'article001'
-      }],
-      other_links:'创 1:10,咏 148,'
-    })
-  })
+    }],
+    other_links:'创 1:10,咏 148,'
+    }
+  DBHander.sharedInstace().insertSent(sentence);
  }
 
  _onAddMultipleData = ()=>{
@@ -46,7 +44,9 @@ export default class ListDividerExample extends Component {
  }
 
  _onFetchSingelData = ()=>{
-
+  // let allSents = this.db.objects('Sentence')
+  // let theSent = allSents.filtered('bible_index = "创 1:1"')
+  // console.log(theSent.raw_content)
  }
 
  _onFetchMutipleData =()=>{
@@ -65,20 +65,29 @@ export default class ListDividerExample extends Component {
         <Content>
           <List>
             <ListItem itemDivider>
-              <Text>A</Text>
+              <Text>Add</Text>
             </ListItem>                    
-            <ListItem >
-              <Text> add </Text>
+            <ListItem onPress={this._onAddSingleData}>
+              <Text>Add One</Text>
             </ListItem>
             <ListItem>
-              <Text>Ali Connors</Text>
+              <Text>Add Multiple</Text>
             </ListItem>
+
             <ListItem itemDivider>
-              <Text>B</Text>
+              <Text>Fetch</Text>
             </ListItem>  
-            <ListItem>
-              <Text>Bradley Horowitz</Text>
+            <ListItem onPress={this._onFetchSingelData}>
+              <Text>Fetch One</Text>
             </ListItem>
+            <ListItem>
+              <Text>Fetch All</Text>
+            </ListItem>
+            <ListItem>
+              <Text>Fetch Filtered</Text>
+            </ListItem>
+
+
           </List>
         </Content>
       </Container>
