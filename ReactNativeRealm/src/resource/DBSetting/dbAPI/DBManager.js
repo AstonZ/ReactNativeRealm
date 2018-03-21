@@ -90,14 +90,9 @@ export default class DBHandler {
           });
     }
     
-    // insert singel sentence
-    insertSentence(sentence){
-        if (sentence===null || sentence === undefined) return;
-        if (!db) openDB()
-
-        db.transaction( (tx) =>{
-
-            let id = sentence.id
+    // Generate sql to insert singel sentence
+    _sqlToInsertSingleSentence(sentence){
+        let id = sentence.id
             let book_type=sentence.book_type
             let book_index=sentence.book_index
             let chapter_index=sentence.chapter_index
@@ -123,11 +118,22 @@ export default class DBHandler {
             `"${bible_index}","${book_name}","${chapter_name}","${raw_content}","${note_id}",`+
             `"${title_to}","${star_to}",${is_hl},"${annos}","${other_links}")`
 
-            // 这种写法是坑
+            // This can not be excuted
             // 'values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)'
+            return sql
+    }
 
+    // insert singel sentence
+    insertSentence(sentence){
+        if (sentence===null || sentence === undefined) return;
+        if (!db) openDB()
+
+        db.transaction( (tx) =>{
+            sql=this._sqlToInsertSingleSentence(sentence)
             tx.executeSql(sql,[],()=>{
-                console.log("这里总要执行什么吧、、、、、")
+                // execute success
+            },err=>{
+                console.log("Execute insert sentence error = ", err)
             })
         },error=>{
             this._errorCB('Insert user', error)
@@ -136,8 +142,26 @@ export default class DBHandler {
         })
     }
 
+    // 
     insertSentenceList(sentList){
-        
+        if (sentList===null || sentList === undefined || sentList.length==0) return;
+        if (!db) openDB()
+        console.log("Start inset " + sentList)
+        db.transaction( (tx) =>{
+            for (let i=0; i<sentList.length; i++){
+                sentence=sentList[i]
+                sql=this._sqlToInsertSingleSentence(sentence)
+                tx.executeSql(sql,[],()=>{
+                    // execute success
+                },err=>{
+                    console.log("Execute insert sentence error = ", err)
+                })
+            }
+        },error=>{
+            this._errorCB('Insert user', error)
+        },()=>{
+            this._successCB('Insert user')
+        })
     }
     // Constructor
     constructor(props){

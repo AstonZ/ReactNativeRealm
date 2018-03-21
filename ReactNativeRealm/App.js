@@ -25,7 +25,10 @@ export default class App extends Component {
  }
 
  _onAddMultipleData = ()=>{
-
+  DBManager.sharedInstace().dropSentenceTable()
+  DBManager.sharedInstace().createTable()
+  let sentList = Sentence.mockSentList()
+  DBManager.sharedInstace().insertSentenceList(sentList)
  }
 
  _onFetchSingelData = ()=>{
@@ -56,7 +59,7 @@ export default class App extends Component {
             <ListItem onPress={this._onAddSingleData}>
               <Text>Add One</Text>
             </ListItem>
-            <ListItem>
+            <ListItem onPress={this._onAddMultipleData}>
               <Text>Add Multiple</Text>
             </ListItem>
 
