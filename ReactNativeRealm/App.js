@@ -38,6 +38,9 @@ export default class App extends Component {
   // console.log(theSent.raw_content)
  }
 
+ _onFetchAllBooks =()=>{
+  DBManager.sharedInstace().fetchAllBooks()
+ }
  _onFetchMutipleData =()=>{
 
  }
@@ -69,8 +72,8 @@ export default class App extends Component {
             <ListItem onPress={this._onFetchSingelData}>
               <Text>Fetch One</Text>
             </ListItem>
-            <ListItem>
-              <Text>Fetch All</Text>
+            <ListItem onPress={this._onFetchAllBooks}>
+              <Text>Fetch All Books</Text>
             </ListItem>
             <ListItem>
               <Text>Fetch Filtered</Text>

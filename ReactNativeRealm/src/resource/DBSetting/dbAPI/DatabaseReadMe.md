@@ -6,7 +6,6 @@ insert or replace into SentenceTable(id,book_type,book_index,chapter_index,sent_
 
 ## 直接插入完整句子列表数据结构
 
-
 ```
 DBManager.sharedInstace().insertSentenceList(sentList)
 ```

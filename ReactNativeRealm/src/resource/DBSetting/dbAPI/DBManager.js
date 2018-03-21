@@ -142,7 +142,7 @@ export default class DBHandler {
         })
     }
 
-    // 
+    // insert sentence list as dict array
     insertSentenceList(sentList){
         if (sentList===null || sentList === undefined || sentList.length==0) return;
         if (!db) openDB()
@@ -163,6 +163,31 @@ export default class DBHandler {
             this._successCB('Insert user')
         })
     }
+
+
+    // fetch all books
+    fetchAllBooks(){
+        if (!db) this.openDB()
+        let sql = `select book_index, book_name from ${kTableSentence}`
+        console.log("Fetch all books sql: "+ sql)
+        db.transaction(tx =>{
+            tx.executeSql(sql,[],(tx,result)=>{
+                let len = result.length
+
+                for(let i=0;i<len;i++){
+                    let row=result.rows.item(i)
+                    console.log('Find book %o', row)
+                }
+            })
+
+        },err=>{
+            this._errorCB('fetchAllBooks',err)
+        },()=>{
+            this._successCB('fetchAllBooks')
+        })
+    }
+
+
     // Constructor
     constructor(props){
         if (!_instance) {
