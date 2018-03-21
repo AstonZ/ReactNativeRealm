@@ -1,7 +1,5 @@
-
-
 import Schema from '../constraint/Schema'
-const Realm = require('realm')
+// const Realm = require('realm')
 var _instance = null
 
 const TableSentence = 'Sentence'
@@ -11,12 +9,7 @@ export default class DBHandler {
     constructor(props){
         if (!_instance) {
             _instance=this;
-            this.db = new Realm(
-                {
-                    path: 'Bible.realm',
-                    schema:[Schema.Annotation, Schema.Sentence]
-                }
-            )
+
         }
     }
 
@@ -28,23 +21,17 @@ export default class DBHandler {
 
     // insert 
     insertSent = sentence =>{
-        this.db.write(()=>{
-            this.db.create(TableSentence,sentence, false)
-        })
+
     }
 
     updateSent = sentence => {
-        this.db.write(()=>{
-            this.db.create(TableSentence, sentence, true)
-        })
+
     }
 
 
 
     fetchAllBooks= ()=> {
-        let bookList = this.db.write(()=>{
-            
-        })
+
     }
 
     fetchAllChapters = (book_id)=>{
