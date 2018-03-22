@@ -28,7 +28,10 @@ export default class App extends Component {
   DBManager.sharedInstace().dropSentenceTable()
   DBManager.sharedInstace().createTable()
   let sentList = Sentence.mockSentList()
-  DBManager.sharedInstace().insertSentenceList(sentList)
+  DBManager.sharedInstace().insertSentenceList(sentList,(isAllSuc, failedIndexes)=>{
+    if(isAllSuc) console.log("Insert Sentence List Success")
+    else console.log("insert sentence failed indexes %o", failedIndexes)
+  })
  }
 
  _onFetchSingelData = ()=>{
@@ -39,7 +42,19 @@ export default class App extends Component {
  }
 
  _onFetchAllBooks =()=>{
-  DBManager.sharedInstace().fetchAllBooks()
+  DBManager.sharedInstace().fetchAllBooks(bookList=>{
+    console.log("Find All book result %o", bookList)
+  },error=>{
+    console.log("Find all book error: " + error)
+  })
+ }
+
+ _onFetchChaptersOfBook = ()=> {
+   DBManager.sharedInstace().fetchChapters(1, chapters=>{
+    console.log("Find All Chapters result %o", chapters)
+   }, error=>{
+    console.log("Find All Chapters result: " + error)
+   })
  }
  _onFetchMutipleData =()=>{
 
@@ -74,6 +89,9 @@ export default class App extends Component {
             </ListItem>
             <ListItem onPress={this._onFetchAllBooks}>
               <Text>Fetch All Books</Text>
+            </ListItem>
+            <ListItem onPress={this._onFetchChaptersOfBook}>
+              <Text>Fetch Chapters of Book</Text>
             </ListItem>
             <ListItem>
               <Text>Fetch Filtered</Text>

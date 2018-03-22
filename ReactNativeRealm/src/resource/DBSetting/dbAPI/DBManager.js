@@ -2,6 +2,8 @@
 var _instance = null
 import SQLiteStorage from 'react-native-sqlite-storage'
 import Sentence from '../model/Sentence'
+import Book from '../model/Book'
+import Chapter from '../model/Chapter'
 SQLiteStorage.DEBUG(true)
 
 const database_name = "Bible.db"
@@ -124,7 +126,7 @@ export default class DBHandler {
     }
 
     // insert singel sentence
-    insertSentence(sentence){
+    insertSentence(sentence,sucCB,failCB){
         if (sentence===null || sentence === undefined) return;
         if (!db) openDB()
 
@@ -132,7 +134,9 @@ export default class DBHandler {
             sql=this._sqlToInsertSingleSentence(sentence)
             tx.executeSql(sql,[],()=>{
                 // execute success
+                if(sucCB)sucCB("insert single sentence success")
             },err=>{
+                if(failCB)failCB("insert singel sentence failed: " + err)
                 console.log("Execute insert sentence error = ", err)
             })
         },error=>{
@@ -143,20 +147,44 @@ export default class DBHandler {
     }
 
     // insert sentence list as dict array
-    insertSentenceList(sentList){
+    /**
+     * insert sentence list 
+     * @param {*} sentList must be [Sentence]
+     * @param {*} onCompletion (isAllSuc=是否全部插入成功, failedIndexes=插入失败的索引)
+     */
+    insertSentenceList(sentList,onCompletion){
         if (sentList===null || sentList === undefined || sentList.length==0) return;
         if (!db) openDB()
         console.log("Start inset " + sentList)
         db.transaction( (tx) =>{
-            for (let i=0; i<sentList.length; i++){
-                sentence=sentList[i]
-                sql=this._sqlToInsertSingleSentence(sentence)
+            let len = sentList.length
+            let sucNum=0 //record sucnum
+            let failIndexes=[]//record failed indexes
+            for (let i=0; i<len; i++){
+                let sentence=sentList[i]
+                let sql=this._sqlToInsertSingleSentence(sentence)
                 tx.executeSql(sql,[],()=>{
                     // execute success
+                    sucNum+=1
+                    if (sucNum+failIndexes.length==len){
+                        if(onCompletion){
+                            if(sucNum==len) onCompletion(true,null)
+                            else onCompletion(false,failIndexes)
+                        }
+                    }
                 },err=>{
+                    failIndexes.push(i)
                     console.log("Execute insert sentence error = ", err)
+                    if (sucNum+failIndexes.length==len){
+                        if(onCompletion){
+                            if(sucNum==len) onCompletion(true,null)
+                            else onCompletion(false,failIndexes)
+                        }
+                    }
                 })
+
             }
+            
         },error=>{
             this._errorCB('Insert user', error)
         },()=>{
@@ -164,28 +192,66 @@ export default class DBHandler {
         })
     }
 
-
     // fetch all books
-    fetchAllBooks(){
+    fetchAllBooks(sucCB,failCB){
         if (!db) this.openDB()
-        let sql = `select book_index, book_name from ${kTableSentence}`
+        let sql = `select distinct book_type, book_index, book_name from ${kTableSentence}`
         console.log("Fetch all books sql: "+ sql)
         db.transaction(tx =>{
-            tx.executeSql(sql,[],(tx,result)=>{
-                let len = result.length
-
-                for(let i=0;i<len;i++){
-                    let row=result.rows.item(i)
-                    console.log('Find book %o', row)
-                }
+            tx.executeSql(sql,[],(tx,results)=>{
+                console.log("Query Complete find results = %o", results)
+                let allBooks = []
+                let rows=results.rows.raw()
+                rows.map(row=>{
+                    let aBook =new Book()
+                    aBook.book_index=row.book_index
+                    aBook.book_name=row.book_name
+                    aBook.book_type=row.book_type
+                    allBooks.push(aBook)
+                    console.log(`Find a Book Book_index ${row.book_index} name: ${row.book_name}`)
+                })
+                if (sucCB) sucCB(allBooks)
+            }, error=>{
+                console.log("Fetch All Book Failed: ", error)
+                if (failCB) failCB("Fetch All Book Failed: ", error)
             })
-
         },err=>{
             this._errorCB('fetchAllBooks',err)
         },()=>{
             this._successCB('fetchAllBooks')
         })
     }
+
+    // find chapters of a book
+    fetchChapters(book_index, sucCB, failCB){
+        if (!db) this.openDB()
+        let sql = `select distinct chapter_index, chapter_name, book_name from ${kTableSentence} where book_index = ${book_index}`
+        db.transaction(tx => {
+            
+            tx.executeSql(sql,[],(tx, results)=>{
+                    let allChapters = []
+                    let rows = results.rows.raw()
+                    rows.map(data=>{
+                        let aChap = new Chapter()
+                        aChap.book_index=book_index
+                        aChap.chapter_index=data.chapter_index
+                        aChap.chapter_name=data.chapter_name
+                        aChap.book_name=data.book_name
+                        allChapters.push(aChap)
+                    })
+                    sucCB(allChapters)
+                }, error=>{
+                    console.log("Fetch All Book Failed: "+ error)
+                    failCB("Fetch All Chapters Failed: "+error)
+                })
+
+            },err=>{
+                this._errorCB('Fetch All Chapter',err)
+            },()=>{
+                this._successCB('Fetch All Chapter')
+            })
+    }
+
 
 
     // Constructor
