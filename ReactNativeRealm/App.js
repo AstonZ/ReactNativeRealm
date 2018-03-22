@@ -56,6 +56,21 @@ export default class App extends Component {
     console.log("Find All Chapters result: " + error)
    })
  }
+ _onFetchAllSentences=()=>{
+   DBManager.sharedInstace().fetchSentences(1,1,sentList=>{
+    console.log("Fetch Sent List = %o", sentList)
+   },error=>{
+    console.log("Fetch Sent List error:", error)
+   })
+ }
+
+ _onFetchChapterFullData=()=>{
+  DBManager.sharedInstace().fetchChapterWithSentences(1,1,aChapter=>{
+    console.log("Fetch Full Chapter Success: %o", aChapter)
+  },error=>{
+    console.log("Fetch Full Chapter  error:", error)
+  })
+ }
  _onFetchMutipleData =()=>{
 
  }
@@ -93,10 +108,12 @@ export default class App extends Component {
             <ListItem onPress={this._onFetchChaptersOfBook}>
               <Text>Fetch Chapters of Book</Text>
             </ListItem>
-            <ListItem>
-              <Text>Fetch Filtered</Text>
+            <ListItem onPress={this._onFetchAllSentences}>
+              <Text>Fetch Sentences of Chapter 1 Book 1</Text>
             </ListItem>
-
+            <ListItem onPress={this._onFetchChapterFullData}>
+              <Text>Fetch Chapter 1 Full Data of Book 1</Text>
+            </ListItem>
 
           </List>
         </Content>

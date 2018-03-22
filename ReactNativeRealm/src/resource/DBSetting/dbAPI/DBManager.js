@@ -109,6 +109,7 @@ export default class DBHandler {
             let title_to=sentence.title_to
             let star_to=sentence.star_to
             let is_hl=sentence.is_hl? 1:0
+            // array to json string
             let annoList = sentence.annos
             var annos = null;
             if(annoList.length>0){
@@ -207,10 +208,7 @@ export default class DBHandler {
                 let allBooks = []
                 let rows=results.rows.raw()
                 rows.map(row=>{
-                    let aBook =new Book()
-                    aBook.book_index=row.book_index
-                    aBook.book_name=row.book_name
-                    aBook.book_type=row.book_type
+                    let aBook = this._rowDataToBook(row)
                     allBooks.push(aBook)
                     console.log(`Find a Book Book_index ${row.book_index} name: ${row.book_name}`)
                 })
@@ -226,7 +224,12 @@ export default class DBHandler {
         })
     }
 
-    // find chapters of a book
+    /**
+     * Find chapters of a book, without sentence data
+     * @param {*} book_index 
+     * @param {*} sucCB 
+     * @param {*} failCB 
+     */
     fetchChapters(book_index, sucCB, failCB){
         if (!db) this.openDB()
         let sql = `select distinct chapter_index, chapter_name, book_name from ${kTableSentence} where book_index = ${book_index}`
@@ -236,11 +239,7 @@ export default class DBHandler {
                     let allChapters = []
                     let rows = results.rows.raw()
                     rows.map(data=>{
-                        let aChap = new Chapter()
-                        aChap.book_index=book_index
-                        aChap.chapter_index=data.chapter_index
-                        aChap.chapter_name=data.chapter_name
-                        aChap.book_name=data.book_name
+                        let aChap = this._rowDataToChapter(data,book_index)
                         allChapters.push(aChap)
                     })
                     sucCB(allChapters)
@@ -253,6 +252,48 @@ export default class DBHandler {
                 this._errorCB('Fetch All Chapter',err)
             },()=>{
                 this._successCB('Fetch All Chapter')
+            })
+    }
+
+    /**
+     * Fetch chapter data with sentences fullfilled
+     * @param {*} book_index 
+     * @param {*} chapter_index 
+     * @param {*} sucCB a Chapter Object with sentences as [Sentences]
+     * @param {*} failCB 
+     */
+    fetchChapterWithSentences(book_index,chapter_index,sucCB,failCB){
+        if (!db) this.openDB()
+        let sql = `select * from ${kTableSentence} where book_index = ${book_index} and chapter_index = ${chapter_index}`
+        db.transaction(tx => {
+            
+            tx.executeSql(sql,[],(tx, results)=>{
+                    let allSentences = []
+                    let rows = results.rows.raw()
+                    var aChapter = null
+                    rows.map(data=>{
+                        let aSent = this._rowDataToSentence(data)
+                        if(aChapter===null){
+                            aChapter = new Chapter()
+                            aChapter.book_index = book_index
+                            aChapter.book_name = aSent.book_name
+                            aChapter.book_type = aSent.book_type
+                            aChapter.chapter_index=chapter_index
+                            aChapter.chapter_name = aSent.chapter_name
+                            aChapter.sentences=[]
+                        }
+                        aChapter.sentences.push(aSent)
+                    })
+                    sucCB(aChapter)
+                }, error=>{
+                    console.log("Fetch chapter with fulldata Failed: "+ error)
+                    failCB("Fetch chapter with fulldata Failed: "+error)
+                })
+
+            },err=>{
+                this._errorCB('Fetch chapter with fulldata',err)
+            },()=>{
+                this._successCB('Fetch chapter with fulldata')
             })
     }
 
@@ -275,18 +316,46 @@ export default class DBHandler {
                     let aSent = this._rowDataToSentence(data)
                     allSents.push(aSent)
                 })
+                if(sucCB)sucCB(allSents)
             },err=>{
-
+                if(failCB)failCB("fetch sentence failed error: "+err)
             })//end execution
 
         },error=>{
-
+            this._errorCB("Fetch sentences ", error)
         },()=>{
-
+            this._successCB("Fetch sentences")
         })        
     }
 
 
+    /**
+     * 便利方法 数据库行数据转化成Book对象
+     * @param {*} rowData 
+     */
+    _rowDataToBook=rowData=>{
+        let aBook = new Book()
+        aBook.book_index=row.book_index
+        aBook.book_name=row.book_name
+        aBook.book_type=row.book_type
+        return aBook
+    }
+    /**
+     * 便利方法 数据库行数据转化成Chapter对象
+     * @param {*} rowData 
+     */
+    _rowDataToChapter=(rowData, book_index)=>{
+        let aChap = new Chapter()
+        aChap.book_index=book_index
+        aChap.chapter_index=data.chapter_index
+        aChap.chapter_name=data.chapter_name
+        aChap.book_name=data.book_name
+        return aChap
+    }
+    /**
+     * 便利方法 数据库行数据转化成Sentence对象
+     * @param {*} rowData 
+     */
     _rowDataToSentence(rowData){
         let aSent = new Sentence()
         aSent.id=rowData.id
