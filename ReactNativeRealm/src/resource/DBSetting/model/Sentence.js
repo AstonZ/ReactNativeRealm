@@ -20,6 +20,20 @@ export default class Sentence {
     }
 
     static mockSentList(){
+
+        let annoList = [
+            {
+                location:1,
+                length:2,
+                article_id:'article001'
+            },
+            {
+                location:4,
+                length:2,
+                article_id:'article002'
+            }
+        ]
+        let jsonStr = "[{'location':1,'length':2,'article_id':'article001'},{'location':4,'length':2,'article_id':'article002'}]";
         let aSent = {
             id: 1,
             book_type:0,
@@ -34,7 +48,7 @@ export default class Sentence {
             title_to:'article001',
             star_to:'article002',
             is_hl:false,
-            annos:"[{'location':'1','length':'2','article_id':'article0001',{'location':'5','length':'2','article_id':'article0002'}]",
+            annos:annoList,
             other_links:'创 1:10,咏 148'
         }
 
@@ -49,7 +63,7 @@ export default class Sentence {
             chapter_name:'神的创造',
             raw_content:'地是空虚混沌，渊面黑暗；神的灵运行在水面上。',
             is_hl:true,
-            annos:"[{'location':'1','length':'2','article_id':'article0001',{'location':'5','length':'2','article_id':'article0002'}]",
+            annos:annoList,
             other_links:'创 1:10,咏 148'
        }
 

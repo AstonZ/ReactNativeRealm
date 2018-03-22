@@ -109,7 +109,11 @@ export default class DBHandler {
             let title_to=sentence.title_to
             let star_to=sentence.star_to
             let is_hl=sentence.is_hl? 1:0
-            let annos=sentence.annos
+            let annoList = sentence.annos
+            var annos = null;
+            if(annoList.length>0){
+                annos = JSON.stringify(annoList)
+            }
             let other_links=sentence.other_links
 
             let sql = 'insert or replace into '+ kTableSentence +
@@ -118,7 +122,7 @@ export default class DBHandler {
             'title_to,star_to,is_hl,annos,other_links)'+
             `values(${id},${book_type},${book_index},${chapter_index},${sent_index},`+
             `"${bible_index}","${book_name}","${chapter_name}","${raw_content}","${note_id}",`+
-            `"${title_to}","${star_to}",${is_hl},"${annos}","${other_links}")`
+            `"${title_to}","${star_to}",${is_hl},'${annos}',"${other_links}")`
 
             // This can not be excuted
             // 'values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)'
@@ -252,6 +256,82 @@ export default class DBHandler {
             })
     }
 
+    /**
+     * fetchSenteces of a chapter
+     * @param {*} book_index 
+     * @param {*} chapter_index 
+     * @param {*} sucCB 
+     * @param {*} failCB 
+     */
+    fetchSentences(book_index,chapter_index,sucCB,failCB){
+        if(!db) this.openDB
+        let sql= `select * from ${kTableSentence} where book_index = ${book_index} and chapter_index = ${chapter_index}`
+        db.transaction(tx=>{
+
+            tx.executeSql(sql,[],(tx,results)=>{
+                let allSents=[]
+                let rows=results.rows.raw()
+                rows.map(data=>{
+                    let aSent = this._rowDataToSentence(data)
+                    allSents.push(aSent)
+                })
+            },err=>{
+
+            })//end execution
+
+        },error=>{
+
+        },()=>{
+
+        })        
+    }
+
+
+    _rowDataToSentence(rowData){
+        let aSent = new Sentence()
+        aSent.id=rowData.id
+        aSent.book_type=rowData.book_type
+        aSent.book_index=rowData.book_index
+        aSent.chapter_index=rowData.chapter_index
+        aSent.sent_index=rowData.sent_index
+
+        aSent.bible_index=rowData.bible_index
+        aSent.book_name=rowData.book_name
+        aSent.chapter_name=rowData.chapter_name
+        aSent.raw_content=rowData.raw_content
+        aSent.note_id=rowData.note_id
+
+        aSent.title_to=rowData.title_to
+        aSent.star_to=rowData.star_to
+        aSent.is_hl=rowData.is_hl
+        annoJsonStr = rowData.annos
+        if(annoJsonStr.length>2){
+            aSent.annos= JSON.parse(annoJsonStr)
+        }else{
+            aSent.annos=null;
+        }
+        aSent.other_links=rowData.other_links
+        return aSent
+    }
+
+    __placeholder=()=>{
+
+        if(!db) this.openDB
+        let sql= `select * from ${kTableSentence} where book_index = ${book_index} and chapter_index = ${chapter_index}`
+        db.transaction(tx=>{
+
+            tx.executeSql(sql,[],(tx,results)=>{
+                
+            },err=>{
+
+            })
+            
+        },error=>{
+
+        },()=>{
+
+        })  
+    }
 
 
     // Constructor
