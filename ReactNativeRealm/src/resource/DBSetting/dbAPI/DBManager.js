@@ -18,17 +18,19 @@ var db;
 
 export default class DBHandler {
     
-    // define callbacks
+    // define callbacks 
     _successCB(name){
         console.log("SQLiteStorage "+name+" success");
     }
 
     _errorCB(name, err){
-        console.log("SQLiteStorage "+name);
+        console.err("SQLiteStorage "+name);
         console.log(err);
     }
 
-    // Open DB
+    /**
+     * Open Database Must be called before any db actions
+     */
     openDB(){
         db = SQLiteStorage.openDatabase(
           database_name,
@@ -44,8 +46,14 @@ export default class DBHandler {
         return db;
       }
 
+    closeDB(){
 
-    //   Create Table
+    }
+
+
+    /**
+     * Create Table
+     */
     createTable(){
         if(!db) this.openDB()
         db.transaction((tx)=>{
@@ -92,7 +100,10 @@ export default class DBHandler {
           });
     }
     
-    // Generate sql to insert singel sentence
+    /**
+     * Tool, Turn sentence object to insert sql
+     * @param {*} sentence 
+     */
     _sqlToInsertSingleSentence(sentence){
         let id = sentence.id
             let book_type=sentence.book_type
@@ -125,12 +136,15 @@ export default class DBHandler {
             `"${bible_index}","${book_name}","${chapter_name}","${raw_content}","${note_id}",`+
             `"${title_to}","${star_to}",${is_hl},'${annos}',"${other_links}")`
 
-            // This can not be excuted
-            // 'values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)'
             return sql
     }
 
-    // insert singel sentence
+    /**
+     * Interface insert or replace Sentence Object
+     * @param {} sentence 
+     * @param {*} sucCB 
+     * @param {*} failCB 
+     */
     insertSentence(sentence,sucCB,failCB){
         if (sentence===null || sentence === undefined) return;
         if (!db) openDB()
@@ -151,7 +165,6 @@ export default class DBHandler {
         })
     }
 
-    // insert sentence list as dict array
     /**
      * insert sentence list 
      * @param {*} sentList must be [Sentence]
@@ -197,7 +210,14 @@ export default class DBHandler {
         })
     }
 
-    // fetch all books
+
+    /**
+     * Fetch All Books
+     * return [Book] 
+     * property: book_type, book_index, book_name
+     * @param {} sucCB 
+     * @param {*} failCB 
+     */
     fetchAllBooks(sucCB,failCB){
         if (!db) this.openDB()
         let sql = `select distinct book_type, book_index, book_name from ${kTableSentence}`
@@ -284,10 +304,10 @@ export default class DBHandler {
                         }
                         aChapter.sentences.push(aSent)
                     })
-                    sucCB(aChapter)
+                    if(sucCB) sucCB(aChapter)
                 }, error=>{
                     console.log("Fetch chapter with fulldata Failed: "+ error)
-                    failCB("Fetch chapter with fulldata Failed: "+error)
+                    if(failCB) failCB("Fetch chapter with fulldata Failed: "+error)
                 })
 
             },err=>{
@@ -305,7 +325,7 @@ export default class DBHandler {
      * @param {*} failCB 
      */
     fetchSentences(book_index,chapter_index,sucCB,failCB){
-        if(!db) this.openDB
+        if(!db) this.openDB()
         let sql= `select * from ${kTableSentence} where book_index = ${book_index} and chapter_index = ${chapter_index}`
         db.transaction(tx=>{
 
@@ -327,6 +347,53 @@ export default class DBHandler {
             this._successCB("Fetch sentences")
         })        
     }
+
+
+    /**
+     * Fetch the Chapter with sentence data using book_prefix and chapterID
+     * @returns a Chapter Object. With its sentences fullfilled as property
+     * @param {} book_prefix like '咏' or '创一'
+     * @param {*} chapter_index  
+     * @param {*} sucCB 
+     * @param {*} failCB 
+     */
+    fetchChapterWithBibleIndex(book_prefix,chapter_index,sucCB, failCB){
+        if(!db) this.openDB()
+        let sql = `select * from ${kTableSentence} where bible_index like '${book_prefix}%' and chapter_index = ${chapter_index}`
+
+        // 执行数据库操作
+        db.transaction(tx=>{
+
+            tx.executeSql(sql,[],(tx,results)=>{
+                let allSentences = []
+                let rows = results.rows.raw()
+                var aChapter = null
+                rows.map(data=>{
+                    let aSent = this._rowDataToSentence(data)
+                    if(aChapter===null){
+                        aChapter = new Chapter()
+                        aChapter.book_index = aSent.book_index
+                        aChapter.book_name = aSent.book_name
+                        aChapter.book_type = aSent.book_type
+                        aChapter.chapter_index=chapter_index
+                        aChapter.chapter_name = aSent.chapter_name
+                        aChapter.sentences=[]
+                    }
+                    aChapter.sentences.push(aSent)
+                })
+                if(sucCB) sucCB(aChapter)
+            },err=>{
+                if(failCB) failCB('Fetch Chapter with bible_index error: ', err)
+            })
+            
+        },error=>{
+            this._errorCB('Transaction Error', error)
+        },()=>{
+            this._successCB('Transaction Success')
+        })  
+    }
+
+    updateNote
 
 
     /**
@@ -383,6 +450,7 @@ export default class DBHandler {
         return aSent
     }
 
+
     __placeholder=()=>{
 
         if(!db) this.openDB
@@ -396,9 +464,9 @@ export default class DBHandler {
             })
             
         },error=>{
-
+            this._errorCB('Transaction Error', error)
         },()=>{
-
+            this._successCB('Transaction Success')
         })  
     }
 
