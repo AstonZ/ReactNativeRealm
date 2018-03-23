@@ -210,6 +210,48 @@ export default class DBHandler {
         })
     }
 
+    /**
+     * 直接执行服务器下发的sqlList
+     * @param {*} sql 
+     */
+    insertSentenceWithSqlList(sqlList,sucCB,failCB){
+        if (sqlList===null || sqlList === undefined || sqlList.length==0) return;
+        if (!db) openDB()
+        console.log("Start inset " + sqlList)
+        db.transaction( (tx) =>{
+            let len = sqlList.length
+            let sucNum=0 //record sucnum
+            let failIndexes=[]//record failed indexes
+            for (let i=0; i<len; i++){
+                let sql=sqlList[i]
+                tx.executeSql(sql,[],()=>{
+                    // execute success
+                    sucNum+=1
+                    if (sucNum+failIndexes.length==len){
+                        if(onCompletion){
+                            if(sucNum==len) onCompletion(true,null)
+                            else onCompletion(false,failIndexes)
+                        }
+                    }
+                },err=>{
+                    failIndexes.push(i)
+                    console.log("Execute insert sentence error = ", err)
+                    if (sucNum+failIndexes.length==len){
+                        if(onCompletion){
+                            if(sucNum==len) onCompletion(true,null)
+                            else onCompletion(false,failIndexes)
+                        }
+                    }
+                })
+
+            }
+            
+        },error=>{
+            this._errorCB('Insert user', error)
+        },()=>{
+            this._successCB('Insert user')
+        })
+    }
 
     /**
      * Fetch All Books
