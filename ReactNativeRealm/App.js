@@ -11,12 +11,6 @@ export default class App extends Component {
    super(props)
  }
 
- _initialState =()=>{
-  // let AnnoSchema = Schema.Annotation
-  // let SentenceSchema = Schema.Sentence
-  // this.db=new Realm({schema:[AnnoSchema, SentenceSchema]})
- }
-
  _onAddSingleData = ()=>{
   DBManager.sharedInstace().dropSentenceTable()
   DBManager.sharedInstace().createTable()
@@ -64,6 +58,7 @@ export default class App extends Component {
    })
  }
 
+//  获取某个book_index,chapter_index 的完整Chapter
  _onFetchChapterFullData=()=>{
   DBManager.sharedInstace().fetchChapterWithSentences(1,1,aChapter=>{
     console.log("Fetch Full Chapter Success: %o", aChapter)
@@ -71,6 +66,39 @@ export default class App extends Component {
     console.log("Fetch Full Chapter  error:", error)
   })
  }
+
+//  用于跳转 根据BibleIndex获取完整Chapter
+ _onFetchChapterWithBibleIndex(){
+  let bible_index = "创 1:1"
+  // 如果是本书跳转，比如只有"1:10" 补充完整后再调用这个接口
+
+  // 格式校验 目前只做了"咏 1:10"格式的，
+  if (bible_index.indexOf(' ')==-1 || bible_index.indexOf(':')==-1){
+    console.log('Type error: ' + bible_index + ' is not standard bible index')
+    return
+  }
+
+  // 待补充 "咏 148"格式的
+
+  //切割 bible_index "咏 1:1"{
+  let firArr = bible_index.split(' ')
+  let prefix = firArr[0]
+  let numbers = firArr[1]
+
+  let numArr= numbers.split(':')
+  let chapter_index = numArr[0]
+  let sentence_index = numArr[1]
+
+  DBManager.sharedInstace().fetchChapterWithBibleIndex(prefix,
+    chapter_index,
+    aChapter=>{
+    console.log("Fetch Full Chapter Success: %o", aChapter)
+    },error=>{
+    console.log("Fetch Full Chapter  error:", error)
+    })
+ }
+
+
  _onFetchMutipleData =()=>{
 
  }
@@ -114,7 +142,9 @@ export default class App extends Component {
             <ListItem onPress={this._onFetchChapterFullData}>
               <Text>Fetch Chapter 1 Full Data of Book 1</Text>
             </ListItem>
-
+            <ListItem onPress={this._onFetchChapterWithBibleIndex}>
+              <Text>Fetch Chapter With "创 1:1"</Text>
+            </ListItem>
           </List>
         </Content>
       </Container>
